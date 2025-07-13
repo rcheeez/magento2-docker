@@ -1,0 +1,30 @@
+# OS and editor junk
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Logs and temp files
+*.log
+*.swp
+*.swo
+*.swn
+*.bak
+
+# Environment config
+.env
+
+# Magento secrets and compiled data
+magento/auth.json
+magento/vendor/
+magento/generated/
+magento/var/
+magento/pub/static/
+magento/app/etc/env.php
+
+# Certs
+certs/server.key
+certs/server.crt
+
+# Composer artifacts
+composer.lock
