@@ -14,6 +14,8 @@ Thumbs.db
 # Environment config
 .env
 
+#credentials file
+auth/auth.json
 # Magento secrets and compiled data
 magento/auth.json
 magento/vendor/
