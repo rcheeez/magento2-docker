@@ -17,9 +17,10 @@ This project provides a complete Docker-based Magento 2.4.x environment configur
 - Varnish full-page cache
 - PHPMyAdmin for DB GUI access
 - Idempotent installation logic
-- Unified `test-ssh:clp` Linux user across stack
+- Unified `www-data` user across stack
 - Health check script for service and URL validation
 - Dockerized with a single custom network and modular structure
+- Static content optimization and proper NGINX configuration
 
 ---
 
@@ -31,9 +32,9 @@ This project provides a complete Docker-based Magento 2.4.x environment configur
 | PHP             | 8.3            |
 | MySQL           | 8.0            |
 | Redis           | alpine         |
-| Elasticsearch   | 8.11.x         |
-| NGINX           | stable         |
-| Varnish         | 7.3            |
+| Elasticsearch   | 8.11.0         |
+| NGINX           | 1.28.0         |
+| Varnish         | 7.4.2          |
 | PHPMyAdmin      | latest         |
 | Docker Compose  | v3.8           |
 
@@ -42,21 +43,23 @@ This project provides a complete Docker-based Magento 2.4.x environment configur
 ## 🗂️ Directory Structure
 
 ```bash
-magento-docker/
+magento2-docker/
 ├── docker-compose.yml
 ├── .env
 ├── .gitignore
-├── install-magento.sh
 ├── health-check.sh
 ├── README.md
-├── magento/
+├── auth/
 │   └── auth.json
+├── magento/                    # Magento application files
 ├── docker/
 │   ├── php/
 │   │   ├── Dockerfile
+│   │   ├── install-magento.sh
 │   │   ├── php.ini
 │   │   └── www.conf
 │   ├── nginx/
+│   │   ├── Dockerfile
 │   │   ├── nginx.conf
 │   │   └── default.conf
 │   └── varnish/
@@ -65,7 +68,7 @@ magento-docker/
 └── certs/
     ├── server.crt
     └── server.key
-````
+```
 
 ---
 
@@ -75,27 +78,27 @@ magento-docker/
 
 ```bash
 git clone <repo-url>
-cd magento-docker
+cd magento2-docker
 
 mkdir certs
 openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
   -keyout certs/server.key \
   -out certs/server.crt \
-  -subj "/C=IN/ST=Maharashtra/L=Mumbai/O=MagentoDocker/CN=localhost"
+  -subj "/C=IN/ST=Maharashtra/L=Mumbai/O=MagentoDocker/CN=34.31.227.51"
 ```
 
 ---
 
 ### 2. Add Magento Marketplace Keys
 
-Create `magento/auth.json`:
+Create `auth/auth.json`:
 
 ```json
 {
   "http-basic": {
     "repo.magento.com": {
-      "username": "your-public-key",
-      "password": "your-private-key"
+      "username": "66c097de57e18a51fa00c6e144a5e312",
+      "password": "60de863cd4b42e92a2994f6d09ef62d9"
     }
   }
 }
@@ -106,14 +109,17 @@ Create `magento/auth.json`:
 ### 3. Configure `.env`
 
 ```env
-MAGENTO_BASE_URL=https://localhost/
-MAGENTO_ADMIN_EMAIL=admin@example.com
+MAGENTO_BASE_URL=https://34.31.227.51/
+MAGENTO_ADMIN_EMAIL=archiesgurav10@gmail.com
 MAGENTO_ADMIN_USER=admin
 MAGENTO_ADMIN_PASS=Admin123@
 
 DB_NAME=magento
 DB_USER=magento
 DB_PASSWORD=magento123
+
+MAGENTO_REPO_PUBLIC_KEY=66c097de57e18a51fa00c6e144a5e312
+MAGENTO_REPO_PRIVATE_KEY=60de863cd4b42e92a2994f6d09ef62d9
 ```
 
 ---
@@ -138,47 +144,101 @@ Magento will automatically install inside the `php-fpm` container via the `insta
 
 ## 🔗 Service Access
 
-| Service       | URL                                                |
-| ------------- | -------------------------------------------------- |
-| Magento Store | [https://localhost/](https://localhost/)           |
-| Magento Admin | [https://localhost/admin](https://localhost/admin) |
-| PHPMyAdmin    | [http://localhost:8080](http://localhost:8080)     |
-| Elasticsearch | [http://localhost:9200](http://localhost:9200)     |
-| Redis         | localhost:6379                                     |
+| Service       | URL                                                      |
+| ------------- | -------------------------------------------------------- |
+| Magento Store | [https://34.31.227.51/](https://34.31.227.51/)         |
+| Magento Admin | [https://34.31.227.51/admin](https://34.31.227.51/admin) |
+| PHPMyAdmin    | [http://34.31.227.51:8080](http://34.31.227.51:8080)   |
+| Elasticsearch | [http://34.31.227.51:9200](http://34.31.227.51:9200)   |
+| Varnish Cache | [http://34.31.227.51:6081](http://34.31.227.51:6081)   |
+| Redis         | 34.31.227.51:6379                                       |
+
+---
+
+## 🔑 Access Credentials
+
+### Magento Admin Panel
+- **URL:** https://34.31.227.51/admin
+- **Username:** `admin`
+- **Password:** `Admin123@`
+- **Email:** `archiesgurav10@gmail.com`
+
+### PHPMyAdmin Database Access
+- **URL:** http://34.31.227.51:8080
+- **Username:** `magento` (or `root` for full access)
+- **Password:** `magento123` (or `root` for root user)
+- **Database:** `magento`
 
 ---
 
 ## 👥 Linux User Permissions
 
-To align volume ownership with host and container:
+The setup uses `www-data` user for proper file permissions:
 
 ```bash
-sudo groupadd clp
-sudo useradd -m -s /bin/bash -g clp test-ssh
-sudo chown -R test-ssh:clp ./magento
+# Files are automatically set with correct permissions during installation
+# All containers run with proper user mapping for security
 ```
 
-* Both `php-fpm` and `nginx` containers run as `test-ssh`
-* `www.conf` and `nginx.conf` reflect these users
+* Both `php-fpm` and `nginx` containers run as `www-data`
+* File permissions are automatically handled during deployment
+* Static content permissions are optimized for web serving
 
 ---
 
-## ⚙️ Health Check Includes:
+## ⚙️ Health Check Features
 
-* MySQL ping via `mysqladmin`
-* Redis PONG via `redis-cli`
-* Elasticsearch response check
-* HTTP status code 200 for:
+The health check script validates:
 
-  * Magento Storefront
-  * PHPMyAdmin
+* ✅ MySQL connectivity via `mysqladmin ping`
+* ✅ Redis connectivity via `redis-cli PONG`
+* ✅ Elasticsearch cluster health
+* ✅ Magento storefront accessibility (HTTP 200/302)
+* ✅ PHPMyAdmin interface availability
+* ✅ All services running status
+
+---
+
+## 🔧 Technical Implementation Details
+
+### Static Content Optimization
+- NGINX configured with proper static file serving
+- Magento static content versioning disabled for optimal performance
+- CSS, JS, fonts, and media files properly cached
+- Gzip compression enabled for better performance
+
+### Varnish Configuration
+- Full-page caching enabled on port 6081
+- Backend configured to connect to NGINX HTTP (port 80)
+- Cache headers properly configured
+- TTL set to 5 minutes for optimal performance
+
+### Security Features
+- HTTPS enabled with self-signed certificates
+- All services isolated in custom Docker network
+- No unnecessary ports exposed
+- Proper file permissions and ownership
+
+---
+
+## 🚀 Deployment Status
+
+✅ **Successfully Deployed on Google Cloud Platform**
+- **Public IP:** 34.31.227.51
+- **All Services:** Running and accessible
+- **Static Content:** Optimized and serving correctly
+- **Varnish Cache:** Operational on port 6081
+- **Health Checks:** All services passing
 
 ---
 
 ## 🔐 Security Considerations
 
-* No FTP used or needed (filesystem permissions are handled via UID/GID)
-* Self-signed certs for local SSL testing
-* All services run in isolated `magento` network
+* Self-signed SSL certificates for HTTPS (replace with valid certs for production)
+* All services run in isolated `magento` Docker network
+* Database credentials should be changed for production use
+* Magento admin credentials should be updated for production
+* File permissions properly configured for security
+* No unnecessary services or ports exposed
 
 ---

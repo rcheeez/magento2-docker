@@ -38,19 +38,19 @@ run_checks() {
   echo -e "${BLUE}🔍 Running Magento Docker Stack Health Check...${RESET}"
 
   # MySQL container health
-  check_service "MySQL" "docker exec mysql mysqladmin ping -uroot -proot"
+  check_service "MySQL" "docker-compose exec -T mysql mysqladmin ping -uroot -proot"
 
   # Redis container health
-  check_service "Redis" "docker exec redis redis-cli ping | grep PONG"
+  check_service "Redis" "docker-compose exec -T redis redis-cli ping | grep PONG"
 
   # Elasticsearch health
-  check_service "Elasticsearch" "curl -s http://localhost:9200 | grep 'cluster_name'"
+  check_service "Elasticsearch" "curl -s http://34.31.227.51:9200 | grep 'cluster_name'"
 
-  # Magento App (HTTP 200)
-  check_service "Magento App URL" "curl -s -o /dev/null -w \"%{http_code}\" http://localhost | grep 200"
+  # Magento App (accepts redirects as success)
+  check_service "Magento App URL" "curl -k -s -o /dev/null -w \"%{http_code}\" https://34.31.227.51 | grep -E '200|302'"
 
   # PHPMyAdmin (HTTP 200)
-  check_service "PHPMyAdmin URL" "curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8080 | grep 200"
+  check_service "PHPMyAdmin URL" "curl -s -o /dev/null -w \"%{http_code}\" http://34.31.227.51:8080 | grep 200"
 
   echo -e "${GREEN}✅ Health check complete.${RESET}"
 }

@@ -81,6 +81,22 @@ if [ ! -f "$MAGENTO_DIR/app/etc/env.php" ]; then
     bin/magento indexer:reindex
     bin/magento cache:flush
 
+    echo "Setting proper permissions for static content..."
+    # Set ownership for all Magento files
+    chown -R www-data:www-data "$MAGENTO_DIR"
+    
+    # Set specific permissions for static and media directories
+    chmod -R 755 "$MAGENTO_DIR/pub/static"
+    chmod -R 755 "$MAGENTO_DIR/pub/media"
+    chmod -R 755 "$MAGENTO_DIR/var"
+    chmod -R 755 "$MAGENTO_DIR/generated"
+    
+    # Ensure NGINX can read static files
+    find "$MAGENTO_DIR/pub/static" -type f -exec chmod 644 {} \;
+    find "$MAGENTO_DIR/pub/static" -type d -exec chmod 755 {} \;
+    find "$MAGENTO_DIR/pub/media" -type f -exec chmod 644 {} \;
+    find "$MAGENTO_DIR/pub/media" -type d -exec chmod 755 {} \;
+
     echo "Configuring Redis for cache and sessions..."
     bin/magento setup:config:set \
       --cache-backend=redis \
@@ -97,8 +113,14 @@ if [ ! -f "$MAGENTO_DIR/app/etc/env.php" ]; then
   fi
 
   # Set final permissions for www-data
-  echo "Setting permissions..."
+  echo "Setting final permissions..."
   chown -R www-data:www-data "$MAGENTO_DIR"
+  
+  # Ensure static content permissions are correct
+  chmod -R 755 "$MAGENTO_DIR/pub/static"
+  chmod -R 755 "$MAGENTO_DIR/pub/media"
+  find "$MAGENTO_DIR/pub/static" -type f -exec chmod 644 {} \;
+  find "$MAGENTO_DIR/pub/media" -type f -exec chmod 644 {} \;
 else
   echo "Magento is already installed. Skipping installation."
 fi
