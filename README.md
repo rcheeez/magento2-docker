@@ -97,8 +97,8 @@ Create `auth/auth.json`:
 {
   "http-basic": {
     "repo.magento.com": {
-      "username": "66c097de57e18a51fa00c6e144a5e312",
-      "password": "60de863cd4b42e92a2994f6d09ef62d9"
+      "username": "<magento-authentication-public-key>",
+      "password": "<magento-authentication-private-key>"
     }
   }
 }
@@ -109,17 +109,17 @@ Create `auth/auth.json`:
 ### 3. Configure `.env`
 
 ```env
-MAGENTO_BASE_URL=https://34.31.227.51/
-MAGENTO_ADMIN_EMAIL=archiesgurav10@gmail.com
-MAGENTO_ADMIN_USER=admin
-MAGENTO_ADMIN_PASS=Admin123@
+MAGENTO_BASE_URL=https://<your-server-ip>/
+MAGENTO_ADMIN_EMAIL=<admin-email>
+MAGENTO_ADMIN_USER=<admin-username>
+MAGENTO_ADMIN_PASS=<admin-password>
 
-DB_NAME=magento
-DB_USER=magento
-DB_PASSWORD=magento123
+DB_NAME=<db-name>
+DB_USER=<db-user>
+DB_PASSWORD=<db-pass>
 
-MAGENTO_REPO_PUBLIC_KEY=66c097de57e18a51fa00c6e144a5e312
-MAGENTO_REPO_PRIVATE_KEY=60de863cd4b42e92a2994f6d09ef62d9
+MAGENTO_REPO_PUBLIC_KEY=<magento-repo-public-key>
+MAGENTO_REPO_PRIVATE_KEY=<magento-repo-private-key>
 ```
 
 ---
@@ -151,7 +151,6 @@ Magento will automatically install inside the `php-fpm` container via the `insta
 | PHPMyAdmin    | [http://34.31.227.51:8080](http://34.31.227.51:8080)   |
 | Elasticsearch | [http://34.31.227.51:9200](http://34.31.227.51:9200)   |
 | Varnish Cache | [http://34.31.227.51:6081](http://34.31.227.51:6081)   |
-| Redis         | 34.31.227.51:6379                                       |
 
 ---
 
@@ -168,21 +167,6 @@ Magento will automatically install inside the `php-fpm` container via the `insta
 - **Username:** `magento` (or `root` for full access)
 - **Password:** `magento123` (or `root` for root user)
 - **Database:** `magento`
-
----
-
-## 👥 Linux User Permissions
-
-The setup uses `www-data` user for proper file permissions:
-
-```bash
-# Files are automatically set with correct permissions during installation
-# All containers run with proper user mapping for security
-```
-
-* Both `php-fpm` and `nginx` containers run as `www-data`
-* File permissions are automatically handled during deployment
-* Static content permissions are optimized for web serving
 
 ---
 
@@ -242,3 +226,17 @@ The health check script validates:
 * No unnecessary services or ports exposed
 
 ---
+
+For further enhancements:
+- We can Integrate CI/CD pipelines for automated builds and deployments.
+- Add monitoring via Prometheus, Grafana, or AWS CloudWatch.
+- Enable centralized logging with ELK or Loki.
+
+---
+
+**Built for assessment and real-world deployment by Archies Gurav.**
+
+## ⚠️ Reviewer Note:
+This live deployment and its credentials are shared strictly for assessment purposes.
+
+All credentials will be rotated and public access revoked after evaluation.
